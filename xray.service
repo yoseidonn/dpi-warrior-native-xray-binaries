@@ -1,0 +1,13 @@
+[Unit]
+Description=Xray Service
+After=network.target
+
+[Service]
+Type=simple
+User=nobody
+ExecStart=/usr/local/bin/xray -config /etc/xray/config.json
+Restart=on-failure
+RestartPreventExitStatus=23
+
+[Install]
+WantedBy=multi-user.target
