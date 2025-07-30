@@ -1,11 +1,11 @@
-# DPI Warrior - Windows x86
+# DPI Warrior - iOS ARM64
 
-**DPI Warrior Edition** - Xray v25.6.8 Native Build for Windows x86
+**DPI Warrior Edition** - Xray v25.6.8 Native Build for iOS ARM64
 
 ## 📋 Branch Information
-- **Branch**: `windows-x86`
-- **Platform**: Windows
-- **Architecture**: x86
+- **Branch**: `ios-arm64`
+- **Platform**: iOS
+- **Architecture**: ARM64
 - **Version**: Xray v25.6.8
 - **Edition**: DPI Warrior
 - **Repository**: [dpi-warrior-native-xray-binaries](https://github.com/yoseidonn/dpi-warrior-native-xray-binaries)
@@ -14,35 +14,40 @@
 
 ### Download This Branch
 ```bash
-git clone -b windows-x86 https://github.com/yoseidonn/dpi-warrior-native-xray-binaries.git
+git clone -b ios-arm64 https://github.com/yoseidonn/dpi-warrior-native-xray-binaries.git
 ```
 
 ### Download as ZIP
 1. Go to: https://github.com/yoseidonn/dpi-warrior-native-xray-binaries
 2. Click on branch dropdown
-3. Select: `windows-x86`
+3. Select: `ios-arm64`
 4. Click "Code" → "Download ZIP"
 
 ## 📁 Contents
 
-Windows executable for 32-bit systems
+Static libraries and frameworks for ARM64 architecture
 
 ## 🔧 Integration
 
-### Windows Integration
-1. Include the .exe file in your application
-2. Execute using Process.run() or similar
-3. Use the provided batch scripts for easy execution
+### iOS Integration
+1. Add the framework to your Xcode project
+2. Import in Swift/Objective-C
+3. Use the provided headers
 
-### Flutter Example
-```dart
-import 'dart:io';
+### Swift Example
+```swift
+import Foundation
 
-class XrayWindows {
-  static Future<void> start(String configPath) async {
-    final process = await Process.start('xray.exe', ['-config', configPath]);
-  }
+guard let framework = Bundle.main.loadFramework(named: "Xray") else {
+    fatalError("Could not load Xray framework")
 }
+
+typealias XrayInitFunc = @convention(c) (UnsafePointer<CChar>?) -> Int32
+guard let xrayInit = framework.symbol(named: "xray_init") as? XrayInitFunc else {
+    fatalError("Could not find xray_init function")
+}
+
+let result = xrayInit("/path/to/config.json")
 ```
 
 ## 🔧 Notes

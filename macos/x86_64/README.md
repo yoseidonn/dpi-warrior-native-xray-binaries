@@ -1,11 +1,11 @@
-# DPI Warrior - Windows x86
+# DPI Warrior - macOS x86_64
 
-**DPI Warrior Edition** - Xray v25.6.8 Native Build for Windows x86
+**DPI Warrior Edition** - Xray v25.6.8 Native Build for macOS x86_64
 
 ## 📋 Branch Information
-- **Branch**: `windows-x86`
-- **Platform**: Windows
-- **Architecture**: x86
+- **Branch**: `macos-x86_64`
+- **Platform**: macOS
+- **Architecture**: x86_64
 - **Version**: Xray v25.6.8
 - **Edition**: DPI Warrior
 - **Repository**: [dpi-warrior-native-xray-binaries](https://github.com/yoseidonn/dpi-warrior-native-xray-binaries)
@@ -14,33 +14,36 @@
 
 ### Download This Branch
 ```bash
-git clone -b windows-x86 https://github.com/yoseidonn/dpi-warrior-native-xray-binaries.git
+git clone -b macos-x86_64 https://github.com/yoseidonn/dpi-warrior-native-xray-binaries.git
 ```
 
 ### Download as ZIP
 1. Go to: https://github.com/yoseidonn/dpi-warrior-native-xray-binaries
 2. Click on branch dropdown
-3. Select: `windows-x86`
+3. Select: `macos-x86_64`
 4. Click "Code" → "Download ZIP"
 
 ## 📁 Contents
 
-Windows executable for 32-bit systems
+Native binary for Intel Mac
 
 ## 🔧 Integration
 
-### Windows Integration
-1. Include the .exe file in your application
-2. Execute using Process.run() or similar
-3. Use the provided batch scripts for easy execution
+### macOS Integration
+1. Include the binary in your app bundle
+2. Run the codesign.sh script for distribution:
+   ```bash
+   ./codesign.sh "Developer ID: Your Name (TEAM_ID)"
+   ```
+3. Execute using Process.run() or similar
 
 ### Flutter Example
 ```dart
 import 'dart:io';
 
-class XrayWindows {
+class XrayMacOS {
   static Future<void> start(String configPath) async {
-    final process = await Process.start('xray.exe', ['-config', configPath]);
+    final process = await Process.start('./xray', ['-config', configPath]);
   }
 }
 ```

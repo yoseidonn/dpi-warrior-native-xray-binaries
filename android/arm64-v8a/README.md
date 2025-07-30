@@ -1,11 +1,11 @@
-# DPI Warrior - Windows x86
+# DPI Warrior - Android ARM64
 
-**DPI Warrior Edition** - Xray v25.6.8 Native Build for Windows x86
+**DPI Warrior Edition** - Xray v25.6.8 Native Build for Android ARM64
 
 ## 📋 Branch Information
-- **Branch**: `windows-x86`
-- **Platform**: Windows
-- **Architecture**: x86
+- **Branch**: `android-arm64-v8a`
+- **Platform**: Android
+- **Architecture**: ARM64
 - **Version**: Xray v25.6.8
 - **Edition**: DPI Warrior
 - **Repository**: [dpi-warrior-native-xray-binaries](https://github.com/yoseidonn/dpi-warrior-native-xray-binaries)
@@ -14,34 +14,38 @@
 
 ### Download This Branch
 ```bash
-git clone -b windows-x86 https://github.com/yoseidonn/dpi-warrior-native-xray-binaries.git
+git clone -b android-arm64-v8a https://github.com/yoseidonn/dpi-warrior-native-xray-binaries.git
 ```
 
 ### Download as ZIP
 1. Go to: https://github.com/yoseidonn/dpi-warrior-native-xray-binaries
 2. Click on branch dropdown
-3. Select: `windows-x86`
+3. Select: `android-arm64-v8a`
 4. Click "Code" → "Download ZIP"
 
 ## 📁 Contents
 
-Windows executable for 32-bit systems
+NDK structure with libxray.so for ARM64 architecture
 
 ## 🔧 Integration
 
-### Windows Integration
-1. Include the .exe file in your application
-2. Execute using Process.run() or similar
-3. Use the provided batch scripts for easy execution
+### Android NDK Integration
+1. Copy the contents to your Android project
+2. Use the provided `Android.mk` and `Application.mk` files
+3. Access through JNI or Flutter FFI
 
-### Flutter Example
+### Flutter FFI Example
 ```dart
+import 'dart:ffi';
 import 'dart:io';
 
-class XrayWindows {
-  static Future<void> start(String configPath) async {
-    final process = await Process.start('xray.exe', ['-config', configPath]);
-  }
+class XrayAndroid {
+  static final DynamicLibrary _lib = Platform.isAndroid
+      ? DynamicLibrary.open('libxray.so')
+      : throw UnsupportedError('Platform not supported');
+      
+  static final int Function(Pointer<Utf8>) _xrayInit = _lib
+      .lookupFunction<Int32 Function(Pointer<Utf8>), int Function(Pointer<Utf8>)>('xray_init');
 }
 ```
 

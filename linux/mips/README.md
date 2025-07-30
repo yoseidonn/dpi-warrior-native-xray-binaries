@@ -1,11 +1,11 @@
-# DPI Warrior - Windows x86
+# DPI Warrior - Linux MIPS32
 
-**DPI Warrior Edition** - Xray v25.6.8 Native Build for Windows x86
+**DPI Warrior Edition** - Xray v25.6.8 Native Build for Linux MIPS32
 
 ## 📋 Branch Information
-- **Branch**: `windows-x86`
-- **Platform**: Windows
-- **Architecture**: x86
+- **Branch**: `linux-mips32`
+- **Platform**: Linux
+- **Architecture**: MIPS32
 - **Version**: Xray v25.6.8
 - **Edition**: DPI Warrior
 - **Repository**: [dpi-warrior-native-xray-binaries](https://github.com/yoseidonn/dpi-warrior-native-xray-binaries)
@@ -14,33 +14,36 @@
 
 ### Download This Branch
 ```bash
-git clone -b windows-x86 https://github.com/yoseidonn/dpi-warrior-native-xray-binaries.git
+git clone -b linux-mips32 https://github.com/yoseidonn/dpi-warrior-native-xray-binaries.git
 ```
 
 ### Download as ZIP
 1. Go to: https://github.com/yoseidonn/dpi-warrior-native-xray-binaries
 2. Click on branch dropdown
-3. Select: `windows-x86`
+3. Select: `linux-mips32`
 4. Click "Code" → "Download ZIP"
 
 ## 📁 Contents
 
-Windows executable for 32-bit systems
+Native binary for MIPS32 Linux systems
 
 ## 🔧 Integration
 
-### Windows Integration
-1. Include the .exe file in your application
-2. Execute using Process.run() or similar
-3. Use the provided batch scripts for easy execution
+### Linux Integration
+1. Include the binary in your application
+2. Run the install.sh script for system installation:
+   ```bash
+   sudo ./install.sh
+   ```
+3. Execute using Process.run() or similar
 
 ### Flutter Example
 ```dart
 import 'dart:io';
 
-class XrayWindows {
+class XrayLinux {
   static Future<void> start(String configPath) async {
-    final process = await Process.start('xray.exe', ['-config', configPath]);
+    final process = await Process.start('./xray', ['-config', configPath]);
   }
 }
 ```
