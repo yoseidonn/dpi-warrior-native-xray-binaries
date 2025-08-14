@@ -11,6 +11,19 @@ if [[ -f "$SECRETS_FILE" ]]; then
   source "$SECRETS_FILE"
 fi
 
+# Push main branch with non-ignored changes (scripts/, working_directory/, etc.)
+push_main() {
+  cd "$REPO_ROOT"
+  git checkout -B main >/dev/null 2>&1 || true
+  git add -A
+  if git diff --cached --quiet; then
+    echo "No changes to push on main"
+  else
+    git commit -m "chore(main): update scripts and working_directory"
+    git push -u origin main || git push -u origin main -f
+  fi
+}
+
 BRANCHES=(
   android-arm64-v8a android-armeabi-v7a android-x86_64 android-x86
   linux-x86_64 linux-x86 linux-arm64 linux-armv7 linux-mips linux-mips64 linux-mips64le linux-mipsle linux-ppc64le linux-s390x linux-riscv64
@@ -42,6 +55,9 @@ has_artifacts() {
     *)         return 1 ;;
   esac
 }
+
+# First, push main
+push_main
 
 for b in "${BRANCHES[@]}"; do
   case "$b" in

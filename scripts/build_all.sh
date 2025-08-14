@@ -3,6 +3,7 @@ set -euo pipefail
 
 REPO_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 WORK_DIR="$REPO_ROOT/working_directory"
+UPSTREAM_DIR="$WORK_DIR/_upstream"
 FINAL_DIR="$REPO_ROOT/final_builds"
 # Defaults; may be overridden by secrets
 ANDROID_NDK_HOME=${ANDROID_NDK_HOME:-${ANDROID_NDK:-}}
@@ -30,9 +31,18 @@ if ((${#missing[@]} > 0)); then
 	exit 1
 fi
 
+# Clone/update upstream into cache, then vendor into working_directory/xray-core (no .git)
 clone_or_update() {
-  cd "$WORK_DIR"
-  if [[ ! -d xray-core ]]; then git clone https://github.com/XTLS/Xray-core.git xray-core; else (cd xray-core && git fetch --all && git reset --hard origin/main); fi
+  mkdir -p "$UPSTREAM_DIR"
+  if [[ ! -d "$UPSTREAM_DIR/xray-core/.git" ]]; then
+    rm -rf "$UPSTREAM_DIR/xray-core"
+    git clone https://github.com/XTLS/Xray-core.git "$UPSTREAM_DIR/xray-core"
+  else
+    (cd "$UPSTREAM_DIR/xray-core" && git fetch --all && git reset --hard origin/main)
+  fi
+  # Vendorize: sync into working copy without .git metadata
+  mkdir -p "$WORK_DIR"
+  rsync -a --delete --exclude ".git" "$UPSTREAM_DIR/xray-core/" "$WORK_DIR/xray-core/"
 }
 
 build_android() {
