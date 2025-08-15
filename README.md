@@ -1,6 +1,6 @@
-# Xray Binaries - Linux mips
+# Xray Binaries - $title
 
-This branch contains Xray build artifacts for Linux mips.
+This branch contains Xray build artifacts for $title.
 
-- Built by DPI Warrior scripts from vendored .
-- See  branch README for usage and build instructions.
+- Built by DPI Warrior scripts from vendored `source/xray-core`.
+- See `main` branch README for usage and build instructions.
