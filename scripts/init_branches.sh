@@ -41,7 +41,7 @@ prepare_readmes() {
       *)         dir="$FINAL_DIR/$b" ; title="$b" ;;
     esac
     mkdir -p "$dir"
-    cat > "$dir/README.md" <<EORMD
+    cat > "$dir/README.md" <<'EORMD'
 # Xray Binaries - $title
 
 This branch contains Xray build artifacts for $title.
