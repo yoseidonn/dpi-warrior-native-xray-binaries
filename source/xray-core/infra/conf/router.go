@@ -536,15 +536,12 @@ func parseFieldRule(msg json.RawMessage) (*router.RoutingRule, error) {
 		IP         *StringList       `json:"ip"`
 		Port       *PortList         `json:"port"`
 		Network    *NetworkList      `json:"network"`
-		SourceIP   *StringList       `json:"sourceIP"`
-		Source     *StringList       `json:"source"`
+		SourceIP   *StringList       `json:"source"`
 		SourcePort *PortList         `json:"sourcePort"`
 		User       *StringList       `json:"user"`
 		InboundTag *StringList       `json:"inboundTag"`
 		Protocols  *StringList       `json:"protocol"`
 		Attributes map[string]string `json:"attrs"`
-		LocalIP    *StringList       `json:"localIP"`
-		LocalPort  *PortList         `json:"localPort"`
 	}
 	rawFieldRule := new(RawFieldRule)
 	err := json.Unmarshal(msg, rawFieldRule)
@@ -607,10 +604,6 @@ func parseFieldRule(msg json.RawMessage) (*router.RoutingRule, error) {
 		rule.Networks = rawFieldRule.Network.Build()
 	}
 
-	if rawFieldRule.SourceIP == nil {
-		rawFieldRule.SourceIP = rawFieldRule.Source
-	}
-
 	if rawFieldRule.SourceIP != nil {
 		geoipList, err := ToCidrList(*rawFieldRule.SourceIP)
 		if err != nil {
@@ -621,18 +614,6 @@ func parseFieldRule(msg json.RawMessage) (*router.RoutingRule, error) {
 
 	if rawFieldRule.SourcePort != nil {
 		rule.SourcePortList = rawFieldRule.SourcePort.Build()
-	}
-
-	if rawFieldRule.LocalIP != nil {
-		geoipList, err := ToCidrList(*rawFieldRule.LocalIP)
-		if err != nil {
-			return nil, err
-		}
-		rule.LocalGeoip = geoipList
-	}
-
-	if rawFieldRule.LocalPort != nil {
-		rule.LocalPortList = rawFieldRule.LocalPort.Build()
 	}
 
 	if rawFieldRule.User != nil {

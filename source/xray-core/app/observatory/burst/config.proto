@@ -26,7 +26,4 @@ message HealthPingConfig {
   int32 samplingCount = 4;
   // ping timeout, int64 values of time.Duration
   int64 timeout = 5;
-  // http method to make request
-  string httpMethod = 6;
-
 }

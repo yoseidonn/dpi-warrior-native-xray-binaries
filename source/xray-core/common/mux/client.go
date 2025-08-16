@@ -173,7 +173,6 @@ type ClientWorker struct {
 	sessionManager *SessionManager
 	link           transport.Link
 	done           *done.Instance
-	timer          *time.Ticker
 	strategy       ClientStrategy
 }
 
@@ -188,7 +187,6 @@ func NewClientWorker(stream transport.Link, s ClientStrategy) (*ClientWorker, er
 		sessionManager: NewSessionManager(),
 		link:           stream,
 		done:           done.New(),
-		timer:          time.NewTicker(time.Second * 16),
 		strategy:       s,
 	}
 
@@ -211,12 +209,9 @@ func (m *ClientWorker) Closed() bool {
 	return m.done.Done()
 }
 
-func (m *ClientWorker) GetTimer() *time.Ticker {
-	return m.timer
-}
-
 func (m *ClientWorker) monitor() {
-	defer m.timer.Stop()
+	timer := time.NewTicker(time.Second * 16)
+	defer timer.Stop()
 
 	for {
 		select {
@@ -225,7 +220,7 @@ func (m *ClientWorker) monitor() {
 			common.Close(m.link.Writer)
 			common.Interrupt(m.link.Reader)
 			return
-		case <-m.timer.C:
+		case <-timer.C:
 			size := m.sessionManager.Size()
 			if size == 0 && m.sessionManager.CloseIfNoSession() {
 				common.Must(m.done.Close())
@@ -281,8 +276,6 @@ func (m *ClientWorker) IsClosing() bool {
 	return false
 }
 
-// IsFull returns true if this ClientWorker is unable to accept more connections.
-// it might be because it is closing, or the number of connections has reached the limit.
 func (m *ClientWorker) IsFull() bool {
 	if m.IsClosing() || m.Closed() {
 		return true
@@ -296,12 +289,12 @@ func (m *ClientWorker) IsFull() bool {
 }
 
 func (m *ClientWorker) Dispatch(ctx context.Context, link *transport.Link) bool {
-	if m.IsFull() {
+	if m.IsFull() || m.Closed() {
 		return false
 	}
 
 	sm := m.sessionManager
-	s := sm.Allocate(&m.strategy)
+	s := sm.Allocate()
 	if s == nil {
 		return false
 	}

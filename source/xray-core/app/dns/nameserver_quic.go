@@ -32,7 +32,7 @@ type QUICNameServer struct {
 	sync.RWMutex
 	cacheController *CacheController
 	destination     *net.Destination
-	connection      *quic.Conn
+	connection      quic.Connection
 	clientIP        net.IP
 }
 
@@ -220,7 +220,7 @@ func (s *QUICNameServer) QueryIP(ctx context.Context, domain string, option dns_
 
 }
 
-func isActive(s *quic.Conn) bool {
+func isActive(s quic.Connection) bool {
 	select {
 	case <-s.Context().Done():
 		return false
@@ -229,8 +229,8 @@ func isActive(s *quic.Conn) bool {
 	}
 }
 
-func (s *QUICNameServer) getConnection() (*quic.Conn, error) {
-	var conn *quic.Conn
+func (s *QUICNameServer) getConnection() (quic.Connection, error) {
+	var conn quic.Connection
 	s.RLock()
 	conn = s.connection
 	if conn != nil && isActive(conn) {
@@ -263,7 +263,7 @@ func (s *QUICNameServer) getConnection() (*quic.Conn, error) {
 	return conn, nil
 }
 
-func (s *QUICNameServer) openConnection() (*quic.Conn, error) {
+func (s *QUICNameServer) openConnection() (quic.Connection, error) {
 	tlsConfig := tls.Config{}
 	quicConfig := &quic.Config{
 		HandshakeIdleTimeout: handshakeTimeout,
@@ -283,7 +283,7 @@ func (s *QUICNameServer) openConnection() (*quic.Conn, error) {
 	return conn, nil
 }
 
-func (s *QUICNameServer) openStream(ctx context.Context) (*quic.Stream, error) {
+func (s *QUICNameServer) openStream(ctx context.Context) (quic.Stream, error) {
 	conn, err := s.getConnection()
 	if err != nil {
 		return nil, err

@@ -23,9 +23,7 @@ func Must(err error) {
 }
 
 // Must2 panics if the second parameter is not nil, otherwise returns the first parameter.
-// This is useful when function returned "sth, err" and avoid many "if err != nil"
-// Internal usage only, if user input can cause err, it must be handled
-func Must2[T any](v T, err error) T {
+func Must2(v interface{}, err error) interface{} {
 	Must(err)
 	return v
 }

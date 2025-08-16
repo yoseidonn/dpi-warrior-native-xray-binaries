@@ -128,13 +128,12 @@ func UClient(c net.Conn, config *tls.Config, fingerprint *utls.ClientHelloID) ne
 
 func copyConfig(c *tls.Config) *utls.Config {
 	return &utls.Config{
-		Rand:                           c.Rand,
-		RootCAs:                        c.RootCAs,
-		ServerName:                     c.ServerName,
-		InsecureSkipVerify:             c.InsecureSkipVerify,
-		VerifyPeerCertificate:          c.VerifyPeerCertificate,
-		KeyLogWriter:                   c.KeyLogWriter,
-		EncryptedClientHelloConfigList: c.EncryptedClientHelloConfigList,
+		Rand:                  c.Rand,
+		RootCAs:               c.RootCAs,
+		ServerName:            c.ServerName,
+		InsecureSkipVerify:    c.InsecureSkipVerify,
+		VerifyPeerCertificate: c.VerifyPeerCertificate,
+		KeyLogWriter:          c.KeyLogWriter,
 	}
 }
 

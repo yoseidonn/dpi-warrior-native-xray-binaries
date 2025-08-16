@@ -110,7 +110,7 @@ func TestVLessInbound(t *testing.T) {
 						Alpn: "",
 						Path: "",
 						Type: "tcp",
-						Dest: "localhost:80",
+						Dest: "127.0.0.1:80",
 						Xver: 0,
 					},
 					{

@@ -53,7 +53,6 @@ func (v *Validator) Get(hash string) *protocol.MemoryUser {
 
 // Get a trojan user with hashed key, nil if user doesn't exist.
 func (v *Validator) GetByEmail(email string) *protocol.MemoryUser {
-	email = strings.ToLower(email)
 	u, _ := v.email.Load(email)
 	if u != nil {
 		return u.(*protocol.MemoryUser)

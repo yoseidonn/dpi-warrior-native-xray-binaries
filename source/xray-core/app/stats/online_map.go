@@ -7,6 +7,7 @@ import (
 
 // OnlineMap is an implementation of stats.OnlineMap.
 type OnlineMap struct {
+	value         int
 	ipList        map[string]time.Time
 	access        sync.RWMutex
 	lastCleanup   time.Time
@@ -24,10 +25,7 @@ func NewOnlineMap() *OnlineMap {
 
 // Count implements stats.OnlineMap.
 func (c *OnlineMap) Count() int {
-	c.access.RLock()
-	defer c.access.RUnlock()
-
-	return len(c.ipList)
+	return c.value
 }
 
 // List implements stats.OnlineMap.
@@ -37,18 +35,23 @@ func (c *OnlineMap) List() []string {
 
 // AddIP implements stats.OnlineMap.
 func (c *OnlineMap) AddIP(ip string) {
+	list := c.ipList
+
 	if ip == "127.0.0.1" {
 		return
 	}
-
 	c.access.Lock()
-	c.ipList[ip] = time.Now()
+	if _, ok := list[ip]; !ok {
+		list[ip] = time.Now()
+	}
 	c.access.Unlock()
-
 	if time.Since(c.lastCleanup) > c.cleanupPeriod {
-		c.RemoveExpiredIPs()
+		list = c.RemoveExpiredIPs(list)
 		c.lastCleanup = time.Now()
 	}
+
+	c.value = len(list)
+	c.ipList = list
 }
 
 func (c *OnlineMap) GetKeys() []string {
@@ -62,22 +65,24 @@ func (c *OnlineMap) GetKeys() []string {
 	return keys
 }
 
-func (c *OnlineMap) RemoveExpiredIPs() {
+func (c *OnlineMap) RemoveExpiredIPs(list map[string]time.Time) map[string]time.Time {
 	c.access.Lock()
 	defer c.access.Unlock()
 
 	now := time.Now()
-	for k, t := range c.ipList {
+	for k, t := range list {
 		diff := now.Sub(t)
 		if diff.Seconds() > 20 {
-			delete(c.ipList, k)
+			delete(list, k)
 		}
 	}
+	return list
 }
 
 func (c *OnlineMap) IpTimeMap() map[string]time.Time {
+	list := c.ipList
 	if time.Since(c.lastCleanup) > c.cleanupPeriod {
-		c.RemoveExpiredIPs()
+		list = c.RemoveExpiredIPs(list)
 		c.lastCleanup = time.Now()
 	}
 

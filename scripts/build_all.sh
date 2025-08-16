@@ -8,6 +8,7 @@ API_LEVEL=${API_LEVEL:-26}
 export GOTOOLCHAIN=local
 SECRETS_FILE="$REPO_ROOT/scripts/.secrets"
 if [[ -f "$SECRETS_FILE" ]]; then source "$SECRETS_FILE"; fi
+XRAY_REF=${XRAY_REF:-}
 [[ -d "$ANDROID_NDK_HOME" ]] || { echo "❌ ANDROID_NDK_HOME invalid: $ANDROID_NDK_HOME"; exit 1; }
 clone_or_update() {
   mkdir -p "$UPSTREAM_DIR"
@@ -15,14 +16,26 @@ clone_or_update() {
     rm -rf "$UPSTREAM_DIR/xray-core"
     git clone https://github.com/XTLS/Xray-core.git "$UPSTREAM_DIR/xray-core"
   else
-    (cd "$UPSTREAM_DIR/xray-core" && git fetch --all && git reset --hard origin/main || git reset --hard origin/master)
+    (cd "$UPSTREAM_DIR/xray-core" && git fetch --all --tags)
   fi
+  (
+    cd "$UPSTREAM_DIR/xray-core"
+    if [[ -n "$XRAY_REF" ]]; then
+      echo "📌 Checking out Xray-core ref: $XRAY_REF"
+      git checkout --force "$XRAY_REF"
+    else
+      echo "📌 Using upstream default branch"
+      git reset --hard origin/main || git reset --hard origin/master
+    fi
+  )
   rsync -a --delete --exclude ".git" "$UPSTREAM_DIR/xray-core/" "$REPO_ROOT/source/xray-core/"
 }
 build_android() {
   local src="$REPO_ROOT/jni_workspaces/xray_go"
   mkdir -p "$FINAL_DIR/android/arm64-v8a" "$FINAL_DIR/android/armeabi-v7a" "$FINAL_DIR/android/x86_64"
   pushd "$src" >/dev/null
+  # Ensure go.mod is tidy before building
+  go mod tidy
   build_one() {
     local abi="$1" goarch="$2" cc="$3" out="$4"
     env GOOS=android GOARCH="$goarch" CGO_ENABLED=1 CC="$cc" go build -v -trimpath -buildmode=c-shared -o "$out/libxray_go.so" .

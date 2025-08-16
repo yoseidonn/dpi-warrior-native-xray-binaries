@@ -12,8 +12,6 @@ import (
 	"github.com/xtls/xray-core/core"
 	feature_stats "github.com/xtls/xray-core/features/stats"
 	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 )
 
 // statsServer is an implementation of StatsService.
@@ -32,7 +30,7 @@ func NewStatsServer(manager feature_stats.Manager) StatsServiceServer {
 func (s *statsServer) GetStats(ctx context.Context, request *GetStatsRequest) (*GetStatsResponse, error) {
 	c := s.stats.GetCounter(request.Name)
 	if c == nil {
-		return nil, status.Error(codes.NotFound, request.Name+" not found.")
+		return nil, errors.New(request.Name, " not found.")
 	}
 	var value int64
 	if request.Reset_ {
@@ -51,7 +49,7 @@ func (s *statsServer) GetStats(ctx context.Context, request *GetStatsRequest) (*
 func (s *statsServer) GetStatsOnline(ctx context.Context, request *GetStatsRequest) (*GetStatsResponse, error) {
 	c := s.stats.GetOnlineMap(request.Name)
 	if c == nil {
-		return nil, status.Error(codes.NotFound, request.Name+" not found.")
+		return nil, errors.New(request.Name, " not found.")
 	}
 	value := int64(c.Count())
 	return &GetStatsResponse{
@@ -66,7 +64,7 @@ func (s *statsServer) GetStatsOnlineIpList(ctx context.Context, request *GetStat
 	c := s.stats.GetOnlineMap(request.Name)
 
 	if c == nil {
-		return nil, status.Error(codes.NotFound, request.Name+" not found.")
+		return nil, errors.New(request.Name, " not found.")
 	}
 
 	ips := make(map[string]int64)

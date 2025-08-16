@@ -144,7 +144,7 @@ func Compact(mb MultiBuffer) MultiBuffer {
 
 	for i := 1; i < len(mb); i++ {
 		curr := mb[i]
-		if curr.Len() > last.Available() {
+		if last.Len()+curr.Len() > Size {
 			mb2 = append(mb2, last)
 			last = curr
 		} else {

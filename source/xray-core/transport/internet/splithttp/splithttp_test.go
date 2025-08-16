@@ -1,7 +1,6 @@
 package splithttp_test
 
 import (
-	"bytes"
 	"context"
 	"crypto/rand"
 	"fmt"
@@ -422,12 +421,18 @@ func Test_maxUpload(t *testing.T) {
 		},
 	}
 
-	uploadReceived := make([]byte, 10001)
+	var uploadSize int
 	listen, err := ListenXH(context.Background(), net.LocalHostIP, listenPort, streamSettings, func(conn stat.Connection) {
 		go func(c stat.Connection) {
 			defer c.Close()
+			var b [10240]byte
 			c.SetReadDeadline(time.Now().Add(2 * time.Second))
-			io.ReadFull(c, uploadReceived)
+			n, err := c.Read(b[:])
+			if err != nil {
+				return
+			}
+
+			uploadSize = n
 
 			common.Must2(c.Write([]byte("Response")))
 		}(conn)
@@ -436,12 +441,10 @@ func Test_maxUpload(t *testing.T) {
 	ctx := context.Background()
 
 	conn, err := Dial(ctx, net.TCPDestination(net.DomainAddress("localhost"), listenPort), streamSettings)
-	common.Must(err)
 
 	// send a slightly too large upload
-	upload := make([]byte, 10001)
-	rand.Read(upload)
-	_, err = conn.Write(upload)
+	var upload [10001]byte
+	_, err = conn.Write(upload[:])
 	common.Must(err)
 
 	var b [10240]byte
@@ -452,8 +455,8 @@ func Test_maxUpload(t *testing.T) {
 	}
 	common.Must(conn.Close())
 
-	if !bytes.Equal(upload, uploadReceived) {
-		t.Error("incorrect upload", upload, uploadReceived)
+	if uploadSize > 10000 || uploadSize == 0 {
+		t.Error("incorrect upload size: ", uploadSize)
 	}
 
 	common.Must(listen.Close())

@@ -113,10 +113,10 @@ func (m *DomainMatcher) Apply(ctx routing.Context) bool {
 
 type MultiGeoIPMatcher struct {
 	matchers []*GeoIPMatcher
-	asType   string // local, source, target
+	onSource bool
 }
 
-func NewMultiGeoIPMatcher(geoips []*GeoIP, asType string) (*MultiGeoIPMatcher, error) {
+func NewMultiGeoIPMatcher(geoips []*GeoIP, onSource bool) (*MultiGeoIPMatcher, error) {
 	var matchers []*GeoIPMatcher
 	for _, geoip := range geoips {
 		matcher, err := GlobalGeoIPContainer.Add(geoip)
@@ -128,7 +128,7 @@ func NewMultiGeoIPMatcher(geoips []*GeoIP, asType string) (*MultiGeoIPMatcher, e
 
 	matcher := &MultiGeoIPMatcher{
 		matchers: matchers,
-		asType:   asType,
+		onSource: onSource,
 	}
 
 	return matcher, nil
@@ -137,18 +137,11 @@ func NewMultiGeoIPMatcher(geoips []*GeoIP, asType string) (*MultiGeoIPMatcher, e
 // Apply implements Condition.
 func (m *MultiGeoIPMatcher) Apply(ctx routing.Context) bool {
 	var ips []net.IP
-
-	switch m.asType {
-	case "local":
-		ips = ctx.GetLocalIPs()
-	case "source":
+	if m.onSource {
 		ips = ctx.GetSourceIPs()
-	case "target":
+	} else {
 		ips = ctx.GetTargetIPs()
-	default:
-		panic("unreachable, asType should be local or source or target")
 	}
-
 	for _, ip := range ips {
 		for _, matcher := range m.matchers {
 			if matcher.Match(ip) {
@@ -160,31 +153,25 @@ func (m *MultiGeoIPMatcher) Apply(ctx routing.Context) bool {
 }
 
 type PortMatcher struct {
-	port   net.MemoryPortList
-	asType string // local, source, target
+	port     net.MemoryPortList
+	onSource bool
 }
 
-// NewPortMatcher create a new port matcher that can match source or local or destination port
-func NewPortMatcher(list *net.PortList, asType string) *PortMatcher {
+// NewPortMatcher create a new port matcher that can match source or destination port
+func NewPortMatcher(list *net.PortList, onSource bool) *PortMatcher {
 	return &PortMatcher{
-		port:   net.PortListFromProto(list),
-		asType: asType,
+		port:     net.PortListFromProto(list),
+		onSource: onSource,
 	}
 }
 
 // Apply implements Condition.
 func (v *PortMatcher) Apply(ctx routing.Context) bool {
-	switch v.asType {
-	case "local":
-		return v.port.Contains(ctx.GetLocalPort())
-	case "source":
+	if v.onSource {
 		return v.port.Contains(ctx.GetSourcePort())
-	case "target":
+	} else {
 		return v.port.Contains(ctx.GetTargetPort())
-	default:
-		panic("unreachable, asType should be local or source or target")
 	}
-
 }
 
 type NetworkMatcher struct {

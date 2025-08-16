@@ -1,35 +1,26 @@
 package conf
 
 import (
-	"github.com/xtls/xray-core/common/errors"
-	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/proxy/dokodemo"
 	"google.golang.org/protobuf/proto"
 )
 
 type DokodemoConfig struct {
-	Address        *Address          `json:"address"`
-	Port           uint16            `json:"port"`
-	PortMap        map[string]string `json:"portMap"`
-	Network        *NetworkList      `json:"network"`
-	FollowRedirect bool              `json:"followRedirect"`
-	UserLevel      uint32            `json:"userLevel"`
+	Host        *Address     `json:"address"`
+	PortValue   uint16       `json:"port"`
+	NetworkList *NetworkList `json:"network"`
+	Redirect    bool         `json:"followRedirect"`
+	UserLevel   uint32       `json:"userLevel"`
 }
 
 func (v *DokodemoConfig) Build() (proto.Message, error) {
 	config := new(dokodemo.Config)
-	if v.Address != nil {
-		config.Address = v.Address.Build()
+	if v.Host != nil {
+		config.Address = v.Host.Build()
 	}
-	config.Port = uint32(v.Port)
-	config.PortMap = v.PortMap
-	for _, v := range config.PortMap {
-		if _, _, err := net.SplitHostPort(v); err != nil {
-			return nil, errors.New("invalid portMap: ", v).Base(err)
-		}
-	}
-	config.Networks = v.Network.Build()
-	config.FollowRedirect = v.FollowRedirect
+	config.Port = uint32(v.PortValue)
+	config.Networks = v.NetworkList.Build()
+	config.FollowRedirect = v.Redirect
 	config.UserLevel = v.UserLevel
 	return config, nil
 }
