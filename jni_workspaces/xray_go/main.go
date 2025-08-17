@@ -10,6 +10,8 @@ import "C"
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime/debug"
 	"sync/atomic"
 
 	"github.com/xtls/xray-core/common/cmdarg"
@@ -24,11 +26,15 @@ var (
 func startXrayInternal(path string) (rc int) {
 	defer func() {
 		if r := recover(); r != nil {
-			C.xlog(C.CString(fmt.Sprintf("panic in StartXray: %v", r)))
+			stack := debug.Stack()
+			C.xlog(C.CString(fmt.Sprintf("[JNI] Panic recovered: %v\nStack:\n%s", r, string(stack))))
 			rc = -9
 			atomic.StoreInt32(&running, 0)
 		}
 	}()
+	// Ensure assets path is set to the directory containing config.json
+	assetsDir := filepath.Dir(path)
+	_ = os.Setenv("XRAY_LOCATION_ASSET", assetsDir)
 	files := cmdarg.Arg{path}
 	format := "auto"
 	C.xlog(C.CString("[JNI] before LoadConfig"))
@@ -64,7 +70,6 @@ func StartXray(configPath *C.char) C.int {
 		atomic.StoreInt32(&running, 0)
 		return -1
 	}
-	_ = os.Setenv("XRAY_LOCATION_ASSET", "")
 	C.xlog(C.CString("[JNI] StartXray entered"))
 	rc := startXrayInternal(path)
 	if rc != 0 {
