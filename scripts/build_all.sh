@@ -4,7 +4,7 @@ REPO_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 FINAL_DIR="$REPO_ROOT/final_builds"
 UPSTREAM_DIR="$REPO_ROOT/source/_upstream"
 ANDROID_NDK_HOME=${ANDROID_NDK_HOME:-${ANDROID_NDK:-}}
-API_LEVEL=${API_LEVEL:-26}
+API_LEVEL=${API_LEVEL:-34}
 export GOTOOLCHAIN=local
 SECRETS_FILE="$REPO_ROOT/scripts/.secrets"
 if [[ -f "$SECRETS_FILE" ]]; then source "$SECRETS_FILE"; fi

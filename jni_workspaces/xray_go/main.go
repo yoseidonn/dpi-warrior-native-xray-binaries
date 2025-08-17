@@ -8,6 +8,7 @@ static void xlog(const char* msg) { __android_log_write(ANDROID_LOG_INFO, "Xray-
 import "C"
 
 import (
+	"fmt"
 	"os"
 	"sync/atomic"
 
@@ -20,6 +21,39 @@ var (
 	xrayInst core.Server
 )
 
+func startXrayInternal(path string) (rc int) {
+	defer func() {
+		if r := recover(); r != nil {
+			C.xlog(C.CString(fmt.Sprintf("panic in StartXray: %v", r)))
+			rc = -9
+			atomic.StoreInt32(&running, 0)
+		}
+	}()
+	files := cmdarg.Arg{path}
+	format := "auto"
+	C.xlog(C.CString("[JNI] before LoadConfig"))
+	c, err := core.LoadConfig(format, files)
+	if err != nil {
+		C.xlog(C.CString("[JNI] LoadConfig failed"))
+		return -2
+	}
+	C.xlog(C.CString("[JNI] after LoadConfig"))
+	srv, err := core.New(c)
+	if err != nil {
+		C.xlog(C.CString("[JNI] core.New failed"))
+		return -3
+	}
+	C.xlog(C.CString("[JNI] after core.New"))
+	if err := srv.Start(); err != nil {
+		C.xlog(C.CString("[JNI] srv.Start failed"))
+		_ = srv.Close()
+		return -4
+	}
+	xrayInst = srv
+	C.xlog(C.CString("[JNI] Xray started OK"))
+	return 0
+}
+
 //export StartXray
 func StartXray(configPath *C.char) C.int {
 	if !atomic.CompareAndSwapInt32(&running, 0, 1) {
@@ -30,33 +64,13 @@ func StartXray(configPath *C.char) C.int {
 		atomic.StoreInt32(&running, 0)
 		return -1
 	}
-	// Prepare environment so xray-core uses our config path
-	_ = os.Setenv("XRAY_LOCATION_ASSET", "/data/data")
-
-	// Build cmdarg.Arg with our single config path and load using upstream API
-	files := cmdarg.Arg{path}
-	format := "auto"
-	c, err := core.LoadConfig(format, files)
-	if err != nil {
-		C.xlog(C.CString("Xray LoadConfig failed"))
+	_ = os.Setenv("XRAY_LOCATION_ASSET", "")
+	C.xlog(C.CString("[JNI] StartXray entered"))
+	rc := startXrayInternal(path)
+	if rc != 0 {
 		atomic.StoreInt32(&running, 0)
-		return -2
 	}
-	srv, err := core.New(c)
-	if err != nil {
-		C.xlog(C.CString("Xray New() failed"))
-		atomic.StoreInt32(&running, 0)
-		return -3
-	}
-	if err := srv.Start(); err != nil {
-		C.xlog(C.CString("Xray Start() failed"))
-		_ = srv.Close()
-		atomic.StoreInt32(&running, 0)
-		return -4
-	}
-	xrayInst = srv
-	C.xlog(C.CString("Xray started"))
-	return 0
+	return C.int(rc)
 }
 
 //export StopXray
@@ -68,7 +82,7 @@ func StopXray() C.int {
 		_ = xrayInst.Close()
 		xrayInst = nil
 	}
-	C.xlog(C.CString("Xray stopped"))
+	C.xlog(C.CString("[JNI] Xray stopped"))
 	return 0
 }
 
